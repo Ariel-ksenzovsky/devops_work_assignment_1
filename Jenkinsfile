@@ -1,7 +1,7 @@
 pipeline {
     agent any
         environment {
-        DOCKER_IMAGE = 'arielk2511/first_asiingnment'
+        DOCKER_IMAGE = 'first_asiingnment'
         BUILD_NUM = "${BUILD_NUMBER}"
     }
     stages {
