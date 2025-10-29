@@ -61,7 +61,7 @@ pipeline {
 
      post {
         always {
-            echo '🧹 Cleaning temporary resources...'
+            echo '🧹 Cleaning temporary resources....'
             sh 'docker system prune -f'
         }
     }
