@@ -1,68 +1,85 @@
 pipeline {
-  agent {
-    docker {
-      image 'docker:27.2.0-cli'                  // Docker CLI בלבד
-      args '-v /var/run/docker.sock:/var/run/docker.sock'  // חיבור ל-daemon של ה-host
-    }
-  }
+    agent any
 
-  environment {
-    DOCKER_IMAGE = 'first_assignment'
-    BUILD_NUM    = "${BUILD_NUMBER}"
-    CONTAINER_NAME = 'first_assignment_container'
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        echo '📥 Cloning repository...'
-        checkout scm
-      }
+    environment {
+        DOCKER_IMAGE    = 'first_assignment'
+        BUILD_NUM       = "${BUILD_NUMBER}"
+        CONTAINER_NAME  = 'first_assignment_dev'
+        PROD_CONTAINER  = 'first_assignment_prod'
     }
 
-    stage('Build Docker Image') {
-      steps {
-        sh '''
-          docker version
-          docker build -t ${DOCKER_IMAGE}:latest .
-          docker build -t ${DOCKER_IMAGE}:0.0.${BUILD_NUM} .
-        '''
-      }
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '📥 Cloning repository...'
+                checkout scm
+            }
+        }
+
+        stage('Preflight: Docker available?') {
+            steps {
+                sh '''
+                  if ! command -v docker >/dev/null 2>&1; then
+                    echo "❌ docker CLI not found on this agent."
+                    echo "➡️  Make sure Jenkins runs with /var/run/docker.sock mapped and docker CLI installed."
+                    exit 127
+                  fi
+                  docker version
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                  docker build -t ${DOCKER_IMAGE}:latest .
+                  docker build -t ${DOCKER_IMAGE}:0.0.${BUILD_NUM} .
+                '''
+            }
+        }
+
+        stage('Run (dev)') {
+            steps {
+                sh '''
+                  docker rm -f ${CONTAINER_NAME} || true
+                  docker run -d --name ${CONTAINER_NAME} -p 8080:80 ${DOCKER_IMAGE}:latest
+                '''
+            }
+        }
+
+        stage('Health check (dev)') {
+            steps {
+                sh '''
+                  echo "🩺 Checking http://localhost:8080 ..."
+                  for i in $(seq 1 12); do
+                    if curl -fsS http://localhost:8080/ >/dev/null; then
+                      echo "✅ Healthy"
+                      exit 0
+                    fi
+                    sleep 5
+                  done
+                  echo "❌ Health check failed"
+                  docker logs ${CONTAINER_NAME} || true
+                  exit 1
+                '''
+            }
+        }
+
+        stage('Deploy (local prod)') {
+            steps {
+                sh '''
+                  docker rm -f ${PROD_CONTAINER} || true
+                  docker run -d --name ${PROD_CONTAINER} -p 8081:80 ${DOCKER_IMAGE}:latest
+                  echo "✅ Deployed to http://localhost:8081"
+                '''
+            }
+        }
     }
 
-    stage('Run') {
-      steps {
-        sh '''
-          docker rm -f ${CONTAINER_NAME} || true
-          docker run -d --name ${CONTAINER_NAME} -p 8080:80 ${DOCKER_IMAGE}:latest
-        '''
-      }
+    post {
+        always {
+            echo '🧹 Cleanup...'
+            sh 'docker system prune -f || true'
+        }
     }
-
-    stage('Health check') {
-      steps {
-        sh '''
-          echo "🩺 Checking health..."
-          sleep 10
-          curl -fsS http://localhost:8080/ > /dev/null
-        '''
-      }
-    }
-
-    stage('Deploy (local prod)') {
-      steps {
-        sh '''
-          docker rm -f ${CONTAINER_NAME}_prod || true
-          docker run -d --name ${CONTAINER_NAME}_prod -p 8081:80 ${DOCKER_IMAGE}:latest
-          echo "✅ Deployed to http://localhost:8081"
-        '''
-      }
-    }
-  }
-
-  post {
-    always {
-      sh 'docker system prune -f || true'
-    }
-  }
 }
