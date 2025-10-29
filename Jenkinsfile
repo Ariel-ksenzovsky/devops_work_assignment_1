@@ -14,11 +14,12 @@ pipeline {
             }
         }
 
-    stage('Build and Push Docker Image') {
+    stage('Build Docker Image') {
             steps {
                 script {
                     echo '🏗️ Building Docker image...'
                     sh '''
+                    docker --version
                     docker build -t ${DOCKER_IMAGE}:latest .
                     docker build -t ${DOCKER_IMAGE}:0.0.${BUILD_NUM} .
                     '''
