@@ -78,7 +78,7 @@ pipeline {
 
     post {
         always {
-            echo '🧹 Cleanup...'
+            echo '🧹 Cleanup..'
             sh 'docker system prune -f || true'
         }
     }
