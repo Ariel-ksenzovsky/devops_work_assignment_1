@@ -3,21 +3,26 @@ pipeline {
   options { skipDefaultCheckout(true) }
 
   environment {
+    GITHUB_TOKEN = 'github-token'
     DOCKER_IMAGE    = 'first_assignment'
     BUILD_NUM       = "${BUILD_NUMBER}"
     CONTAINER_NAME  = 'first_assignment_dev'
     PROD_CONTAINER  = 'first_assignment_prod'
   }
 
-  stages {
+    trigger {
+      pollSCM('* * * * *')
+    }
+
+   stages {
     stage('Checkout') {
       steps {
         deleteDir()
         checkout([$class: 'GitSCM',
-          branches: [[name: '*/main']],
+          branches: [[name: '*/main']],   // adjust if needed
           userRemoteConfigs: [[
-            url: 'https://github.com/Ariel-ksenzovsky/devops_work_assignment_1.git'
-            // credentialsId: 'jenkins-dind'
+            url: 'https://github.com/Ariel-ksenzovsky/devops_work_assignment_1.git',
+            credentialsId: 'github-creds' // <— use your ID (jenkins-dind) if that’s the one
           ]],
           extensions: [
             [$class: 'CleanBeforeCheckout'],
@@ -28,6 +33,9 @@ pipeline {
         sh 'git rev-parse --is-inside-work-tree && git log -1 --oneline'
       }
     }
+
+    // ... your other stages unchanged ...
+  }
 
     stage('Preflight: Docker available?') {
       steps {
