@@ -11,7 +11,7 @@ RUN apt-get update -y && \
     apt-get update -y && \
     apt-get install -y docker-ce docker-ce-cli containerd.io
 
-# Configure Docker to run as a non-root user
+# Configure Docker to run as a non-root user.
 RUN usermod -aG docker jenkins
 
 # Enable DinD
