@@ -10,11 +10,28 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps {
-                echo '📥 Cloning repository...'
-                checkout scm
-            }
-        }
+      steps {
+        // Make 100% sure workspace is empty and writable
+        deleteDir()
+
+        checkout([
+          $class: 'GitSCM',
+          branches: [[name: '*/main']], // change if your default branch differs
+          userRemoteConfigs: [[
+            url: 'https://github.com/Ariel-ksenzovsky/devops_work_assignment_1.git',
+            // credentialsId: 'jenkins-dind'  // keep only if the repo is private
+          ]],
+          extensions: [
+            [$class: 'CleanBeforeCheckout'],
+            [$class: 'PruneStaleBranch'],
+            [$class: 'CloneOption', shallow: false, noTags: false, depth: 0, timeout: 30]
+          ]
+        ])
+
+        // Sanity: prove we are in a real git worktree
+        sh 'git rev-parse --is-inside-work-tree && git log -1 --oneline'
+      }
+    }
 
         stage('Preflight: Docker available?') {
             steps {
