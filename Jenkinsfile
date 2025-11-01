@@ -1,48 +1,38 @@
 pipeline {
   agent any
-  options { skipDefaultCheckout(true) }
 
-  environment {
-    GITHUB_TOKEN = 'jenkins-dind'
-    DOCKER_IMAGE    = 'first_assignment'
-    BUILD_NUM       = "${BUILD_NUMBER}"
-    CONTAINER_NAME  = 'first_assignment_dev'
-    PROD_CONTAINER  = 'first_assignment_prod'
+  options {
+    timestamps()
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    disableConcurrentBuilds()
   }
 
-    trigger {
-      pollSCM('* * * * *')
-    }
+  // Poll the GitHub repository every 2 minutes
+  triggers {
+    pollSCM('H/2 * * * *')
+  }
 
-   stages {
+  environment {
+    IMAGE_NAME     = 'myapp'
+    IMAGE_TAG      = "0.0.${env.BUILD_NUMBER}"
+    CONTAINER_NAME = 'myapp_container'
+    APP_PORT       = '8080'   // internal port inside container
+    HOST_PORT      = '8080'   // exposed port on host
+  }
+
+  stages {
     stage('Checkout') {
       steps {
         deleteDir()
-        checkout([$class: 'GitSCM',
-          branches: [[name: '*/main']],   // adjust if needed
-          userRemoteConfigs: [[
-            url: 'https://github.com/Ariel-ksenzovsky/devops_work_assignment_1.git',
-            credentialsId: 'jenkins-dind' // <— use your ID (jenkins-dind) if that’s the one
-          ]],
-          extensions: [
-            [$class: 'CleanBeforeCheckout'],
-            [$class: 'PruneStaleBranch'],
-            [$class: 'CloneOption', shallow: false, noTags: false, depth: 0, timeout: 30]
-          ]
-        ])
-        sh 'git rev-parse --is-inside-work-tree && git log -1 --oneline'
+        checkout scm
       }
     }
 
-    // ... your other stages unchanged ...
-  }
-
-    stage('Preflight: Docker available?') {
+    stage('Verify Docker Installed') {
       steps {
         sh '''
           if ! command -v docker >/dev/null 2>&1; then
-            echo "❌ docker CLI not found on this agent."
-            echo "➡️  Map /var/run/docker.sock and install docker CLI."
+            echo "❌ Docker CLI not found. Please install Docker or mount /var/run/docker.sock."
             exit 127
           fi
           docker version
@@ -53,45 +43,30 @@ pipeline {
     stage('Build Docker Image') {
       steps {
         sh '''
-          docker build -t ${DOCKER_IMAGE}:latest .
-          docker build -t ${DOCKER_IMAGE}:0.0.${BUILD_NUM} .
+          set -eux
+          echo "🚀 Building Docker image..."
+          docker build -t ${IMAGE_NAME}:latest -t ${IMAGE_NAME}:${IMAGE_TAG} .
+          docker images | grep ${IMAGE_NAME}
         '''
       }
     }
 
-    stage('Run (dev)') {
+    stage('Run Container') {
       steps {
         sh '''
-          docker rm -f ${CONTAINER_NAME} || true
-          docker run -d --name ${CONTAINER_NAME} -p 8080:80 ${DOCKER_IMAGE}:latest
-        '''
-      }
-    }
+          set -eux
+          echo "🧹 Removing old container if exists..."
+          docker rm -f ${CONTAINER_NAME} >/dev/null 2>&1 || true
 
-    stage('Health check (dev)') {
-      steps {
-        sh '''
-          echo "🩺 Checking http://localhost:8080 ..."
-          for i in $(seq 1 12); do
-            if curl -fsS http://localhost:8080/ >/dev/null; then
-              echo "✅ Healthy"
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "❌ Health check failed"
-          docker logs ${CONTAINER_NAME} || true
-          exit 1
-        '''
-      }
-    }
+          echo "🏃 Running new container..."
+          docker run -d \
+            --name ${CONTAINER_NAME} \
+            -p ${HOST_PORT}:${APP_PORT} \
+            --restart unless-stopped \
+            ${IMAGE_NAME}:latest
 
-    stage('Deploy (local prod)') {
-      steps {
-        sh '''
-          docker rm -f ${PROD_CONTAINER} || true
-          docker run -d --name ${PROD_CONTAINER} -p 8081:80 ${DOCKER_IMAGE}:latest
-          echo "✅ Deployed to http://localhost:8081"
+          echo "✅ Container is now running:"
+          docker ps --filter "name=${CONTAINER_NAME}"
         '''
       }
     }
@@ -99,11 +74,14 @@ pipeline {
 
   post {
     always {
-      echo '🧹 Cleanup...'
-      script {
-        try { sh 'docker system prune -f || true' } catch (ignored) {}
-        try { cleanWs(cleanWhenNotBuilt: false) } catch (ignored) {}
-      }
+      echo "Build complete. Cleaning up old dangling images..."
+      sh 'docker image prune -f || true'
+    }
+    success {
+      echo "🎉 Build and run successful! Access your app at http://localhost:${HOST_PORT}"
+    }
+    failure {
+      echo "❌ Build failed. Check logs above."
     }
   }
 }
