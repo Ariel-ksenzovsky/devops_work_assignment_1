@@ -22,7 +22,7 @@ pipeline {
           branches: [[name: '*/main']],   // adjust if needed
           userRemoteConfigs: [[
             url: 'https://github.com/Ariel-ksenzovsky/devops_work_assignment_1.git',
-            credentialsId: 'github-creds' // <— use your ID (jenkins-dind) if that’s the one
+            credentialsId: 'jenkins-dind' // <— use your ID (jenkins-dind) if that’s the one
           ]],
           extensions: [
             [$class: 'CleanBeforeCheckout'],
