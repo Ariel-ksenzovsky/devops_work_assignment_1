@@ -3,7 +3,7 @@ pipeline {
   options { skipDefaultCheckout(true) }
 
   environment {
-    GITHUB_TOKEN = 'github-token'
+    GITHUB_TOKEN = 'jenkins-dind'
     DOCKER_IMAGE    = 'first_assignment'
     BUILD_NUM       = "${BUILD_NUMBER}"
     CONTAINER_NAME  = 'first_assignment_dev'
