@@ -9,7 +9,7 @@ pipeline {
 
   // Poll the GitHub repository every 2 minutes
   triggers {
-    pollSCM('H/2 * * * *')
+    pollSCM('* * * * *')
   }
 
   environment {
