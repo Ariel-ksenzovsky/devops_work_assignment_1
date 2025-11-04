@@ -59,14 +59,14 @@ pipeline {
           docker rm -f ${CONTAINER_NAME} >/dev/null 2>&1 || true
 
           echo "🏃 Running new container..."
-          // docker run -d \
-          //   --name ${CONTAINER_NAME} \
-          //   -p ${HOST_PORT}:${APP_PORT} \
-          //   --restart unless-stopped \
-          //   ${IMAGE_NAME}:latest
+          docker run -d \
+           # --name ${CONTAINER_NAME} \
+           # -p ${HOST_PORT}:${APP_PORT} \
+           # --restart unless-stopped \
+           # ${IMAGE_NAME}:latest
 
-          // echo "✅ Container is now running:"
-          // docker ps --filter "name=${CONTAINER_NAME}"
+          # echo "✅ Container is now running:"
+          # docker ps --filter "name=${CONTAINER_NAME}"
           docker compose up -d --build
           echo "🎉 Build and run successful! Access your app at http://localhost:${HOST_PORT}"
         '''
