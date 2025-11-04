@@ -67,7 +67,7 @@ pipeline {
 
           # echo "✅ Container is now running:"
           # docker ps --filter "name=${CONTAINER_NAME}"
-          docker compose up -d --build
+          docker-compose up --build
           echo "🎉 Build and run successful! Access your app at http://localhost:${HOST_PORT}"
         '''
       }
