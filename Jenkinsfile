@@ -58,8 +58,8 @@ pipeline {
           echo "🧹 Removing old container if exists..."
           docker rm -f ${CONTAINER_NAME} >/dev/null 2>&1 || true
 
-          echo "🏃 Running new container..."
-          docker run -d \
+          # echo "🏃 Running new container..."
+          # docker run -d \
            # --name ${CONTAINER_NAME} \
            # -p ${HOST_PORT}:${APP_PORT} \
            # --restart unless-stopped \
