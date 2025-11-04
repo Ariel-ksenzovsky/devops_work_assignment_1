@@ -9,10 +9,6 @@ services:
                "
     ports:
       - "8080:8080"   # Jenkins UI
-      - "50000:50000" # inbound agents (optional)
-      - "8081:8081"   # ynet app
-      - "9090:9090"   # cadvisor
-      - "3000:3000"   # grafana
     volumes:
       - ./jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock  # let Jenkins talk to Docker on the host
