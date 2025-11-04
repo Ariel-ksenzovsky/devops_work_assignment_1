@@ -1,0 +1,88 @@
+version: "3.9"
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+services:
+  # --- Your Flask app (from earlier) ---
+  ynet-rss:
+    build: .
+    image: ynet
+    container_name: ynet
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+    networks:
+      - monitoring
+    # Compose automatically injects labels like com.docker.compose.service=ynet-rss
+    # cAdvisor will expose these as container_label_com_docker_compose_service
+
+  # --- Prometheus ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # --- Grafana ---
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    environment:
+      # Default admin credentials (change in production)
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # --- cAdvisor (container-level CPU/memory, etc.) ---
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /cgroup:/cgroup:ro  # if your host uses cgroup v1 (harmless if missing)
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # --- (Optional) Node Exporter (host-level CPU/mem/disk) ---
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    pid: host
+    network_mode: host
+    restart: unless-stopped
+    # NOTE: If you prefer not to use host networking, expose port 9100 and add a target in prometheus.yml.

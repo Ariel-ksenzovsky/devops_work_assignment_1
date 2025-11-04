@@ -3,6 +3,9 @@ services:
     image: jenkins/jenkins:lts
     container_name: jenkins
     user: root
+    command: >
+      bash -c "apt-get update &&
+               apt-get install -y docker.io &&""
     ports:
       - "8080:8080"   # Jenkins UI
       - "50000:50000" # inbound agents (optional)

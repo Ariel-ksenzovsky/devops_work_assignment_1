@@ -40,16 +40,16 @@ pipeline {
       }
     }
 
-    stage('Build Docker Image') {
-      steps {
-        sh '''
-          set -eux
-          echo "🚀 Building Docker image..."
-          docker build -t ${IMAGE_NAME}:latest -t ${IMAGE_NAME}:${IMAGE_TAG} .
-          docker images | grep ${IMAGE_NAME}
-        '''
-      }
-    }
+    // stage('Build Docker Image') {
+    //   steps {
+    //     sh '''
+    //       set -eux
+    //       echo "🚀 Building Docker image..."
+    //       docker build -t ${IMAGE_NAME}:latest -t ${IMAGE_NAME}:${IMAGE_TAG} .
+    //       docker images | grep ${IMAGE_NAME}
+    //     '''
+    //   }
+    // }
 
     stage('Run Container') {
       steps {
@@ -59,14 +59,16 @@ pipeline {
           docker rm -f ${CONTAINER_NAME} >/dev/null 2>&1 || true
 
           echo "🏃 Running new container..."
-          docker run -d \
-            --name ${CONTAINER_NAME} \
-            -p ${HOST_PORT}:${APP_PORT} \
-            --restart unless-stopped \
-            ${IMAGE_NAME}:latest
+          // docker run -d \
+          //   --name ${CONTAINER_NAME} \
+          //   -p ${HOST_PORT}:${APP_PORT} \
+          //   --restart unless-stopped \
+          //   ${IMAGE_NAME}:latest
 
-          echo "✅ Container is now running:"
-          docker ps --filter "name=${CONTAINER_NAME}"
+          // echo "✅ Container is now running:"
+          // docker ps --filter "name=${CONTAINER_NAME}"
+          docker compose up -d --build
+          echo "🎉 Build and run successful! Access your app at http://localhost:${HOST_PORT}"
         '''
       }
     }
