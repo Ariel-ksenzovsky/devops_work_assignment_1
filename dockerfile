@@ -3,7 +3,7 @@ FROM python:3.7
 COPY ynet.py /app/ynet.py
 
 # Make port 80 available to the world outside this container
-EXPOSE 80
+EXPOSE 8081
 
 # Define environment variable
 ENV RSS_URL=https://www.ynet.co.il/Integration/StoryRss2.xml

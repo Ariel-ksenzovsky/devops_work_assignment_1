@@ -16,8 +16,8 @@ pipeline {
     IMAGE_NAME     = 'myapp'
     IMAGE_TAG      = "0.0.${env.BUILD_NUMBER}"
     CONTAINER_NAME = 'myapp_container'
-    APP_PORT       = '8080'   // internal port inside container
-    HOST_PORT      = '8080'   // exposed port on host
+    APP_PORT       = '8081'   // internal port inside container
+    HOST_PORT      = '8081'   // exposed port on host
   }
 
   stages {
