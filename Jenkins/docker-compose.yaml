@@ -5,10 +5,7 @@ services:
     user: root
     command: >
       bash -c "apt-get update &&
-               apt-get install -y docker.io &&
-               curl -SL https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64 \
-                  -o /usr/local/bin/docker-compose &&
-                chmod +x /usr/local/bin/docker-compose
+               apt-get install -y docker.io
                "
     ports:
       - "8080:8080"   # Jenkins UI
