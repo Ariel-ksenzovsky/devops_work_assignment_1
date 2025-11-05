@@ -44,7 +44,7 @@ pipeline {
     //   steps {
     //     sh '''
     //       set -eux
-    //       echo "🚀 Building Docker image..."
+    //       echo "🚀 Building Docker image...."
     //       docker build -t ${IMAGE_NAME}:latest -t ${IMAGE_NAME}:${IMAGE_TAG} .
     //       docker images | grep ${IMAGE_NAME}
     //     '''
