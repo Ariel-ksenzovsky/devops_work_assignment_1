@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 # Add app
 COPY ynet.py .
 
-EXPOSE 8081
+EXPOSE 5000
 
 # Healthcheck (optional)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
