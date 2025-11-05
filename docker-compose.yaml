@@ -73,7 +73,7 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /cgroup:/cgroup:ro  # if your host uses cgroup v1 (harmless if missing)
     ports:
-      - "8082:8082"
+      - "5001:8082"
     restart: unless-stopped
     networks:
       - monitoring
