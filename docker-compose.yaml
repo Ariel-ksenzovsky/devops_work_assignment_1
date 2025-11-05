@@ -15,10 +15,9 @@ services:
     image: ynet
     container_name: ynet
     ports:
-      - "5000:8081"
+      - "5000:5000"
     restart: unless-stopped
-    networks:
-      - monitoring
+    networks: [monitoring]
     # Compose automatically injects labels like com.docker.compose.service=ynet-rss
     # cAdvisor will expose these as container_label_com_docker_compose_service
 
@@ -35,7 +34,7 @@ services:
       - ./prometheus:/etc/prometheus:ro
       - prometheus-data:/prometheus
     ports:
-      - "9090:9091"
+      - "9090:9090"
     restart: unless-stopped
     networks:
       - monitoring
@@ -52,7 +51,7 @@ services:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
     ports:
-      - "3000:3001"
+      - "3000:3000"
     depends_on:
       - prometheus
     restart: unless-stopped
@@ -73,11 +72,9 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /cgroup:/cgroup:ro  # if your host uses cgroup v1 (harmless if missing)
     ports:
-      - "5001:8082"
+      - "5001:5001"
     restart: unless-stopped
-    networks:
-      - monitoring
-
+    networks: [monitoring]
   # --- (Optional) Node Exporter (host-level CPU/mem/disk) ---
   node-exporter:
     image: prom/node-exporter:latest
