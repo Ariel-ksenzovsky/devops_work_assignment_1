@@ -35,7 +35,7 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+      - "9090:9091"
     restart: unless-stopped
     networks:
       - monitoring
@@ -52,7 +52,7 @@ services:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
     ports:
-      - "3000:3000"
+      - "3000:3001"
     depends_on:
       - prometheus
     restart: unless-stopped
@@ -73,7 +73,7 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /cgroup:/cgroup:ro  # if your host uses cgroup v1 (harmless if missing)
     ports:
-      - "8081:8080"
+      - "8081:8082"
     restart: unless-stopped
     networks:
       - monitoring
