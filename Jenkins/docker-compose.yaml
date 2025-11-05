@@ -7,9 +7,10 @@ services:
     ports:
       - "8080:8080"   # Jenkins UI
       - "50000:50000" # inbound agents (optional)
-      - "8081:8081"   # ynet app
-      - "9091:9091"   # cadvisor
-      - "3001:3001"   # grafana
+      - "5000:5000"   # ynet app
+      - "9090:9090"   # prometheus
+      - "3000:3000"   # grafana
+      - "5001:5001"   # cadvisor
       - "8082:8082"   # node-exporter
     volumes:
       - ./jenkins_home:/var/jenkins_home
